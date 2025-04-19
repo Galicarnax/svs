@@ -4,7 +4,7 @@ LDFLAGS =
 
 SRC_DIR = src
 BUILD_DIR = build
-INSTALL_DIR = /usr/local/bin
+INSTALL_DIR = /usr/bin
 
 SRC = $(SRC_DIR)/svs.c
 OBJ = $(BUILD_DIR)/svs.o
@@ -24,8 +24,8 @@ $(BUILD_DIR):
 
 .PHONY: install
 install: $(TARGET)
-	install -d $(INSTALL_DIR)
-	install -m 755 $(TARGET) $(INSTALL_DIR)
+	install -d $(DESTDIR)$(INSTALL_DIR)
+	install -m 755 $(TARGET) $(DESTDIR)$(INSTALL_DIR)/svs
 
 .PHONY: clean
 clean:
