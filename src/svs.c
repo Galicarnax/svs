@@ -123,11 +123,7 @@ int service_status_short(const char *service_dir)
     {
         return 1;
     }
-    else if (state == 1 || state == 2)
-    {
-        return 0;
-    }
-    return 2;
+    return 0;
 }
 
 struct service_status get_service_status(const char *service_dir)
@@ -441,7 +437,7 @@ int print_status(DIR *dir, char *svdir)
             }
         }
 
-        // Time formatting
+        // colorize time for recent status changes
         char time_str[16];
         format_time(delta, time_str, sizeof(time_str));
         const char *time_fmt;
@@ -527,11 +523,9 @@ int main(int argc, char *argv[])
 
     if (quiet_mode)
     {
-        if (check_services(dir, svdir) == 1)
-        {
-            closedir(dir);
-            return 1;
-        }
+        int ret = check_services(dir, svdir);
+        closedir(dir);
+        return ret;
     }
     else
     {
