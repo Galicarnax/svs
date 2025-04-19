@@ -88,7 +88,7 @@ int compare_entries(const void *a, const void *b)
 
 // return 0 if service is running,
 // 1 if service is down and wants up
-// -1 if error (broken symlink, non-existing run, ...)
+// 2 if error (broken symlink, non-existing run, ...)
 int service_status_short(const char *service_dir)
 {
     char status_path[256];
@@ -96,16 +96,16 @@ int service_status_short(const char *service_dir)
     struct stat s;
     if (stat(status_path, &s) == -1)
     {
-        return -1;
+        return 2;
     }
     if (s.st_size != 20)
     {
-        return -1;
+        return 2;
     }
     FILE *fp = fopen(status_path, "rb");
     if (!fp)
     {
-        return -1;
+        return 2;
     }
 
     char svstatus[20];
@@ -113,7 +113,7 @@ int service_status_short(const char *service_dir)
     fclose(fp);
     if (nread != 20)
     {
-        return -1;
+        return 2;
     }
 
     int state = svstatus[19];
@@ -127,7 +127,7 @@ int service_status_short(const char *service_dir)
     {
         return 0;
     }
-    return -1;
+    return 2;
 }
 
 struct service_status get_service_status(const char *service_dir)
@@ -320,24 +320,29 @@ int get_username_from_pid(int pid, char *user, size_t user_size)
 int check_services(DIR *dir, char *svdir)
 {
     struct dirent *entry;
+    int failed = 0;
+    int non_service = 0;
+    int dir_non_empty = 0;
     while ((entry = readdir(dir)))
     {
         if (entry->d_type == DT_DIR || entry->d_type == DT_LNK)
         {
+            dir_non_empty++;
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
                 continue;
             char service_dir[258];
             snprintf(service_dir, sizeof(service_dir), "%s/%s", svdir, entry->d_name);
-            // service_dir[sizeof(service_dir) - 1] = '\0';
             int status = service_status_short(service_dir);
-            if (status > 0)
-            {
-                return 1;
-            }
+            if (status == 1) failed++;
+            if (status == 2) non_service++;
         }
     }
+    if (!dir_non_empty) return 3;
+    if (failed) return 1;
+    if (non_service) return 2;
     return 0;
 }
+
 
 int print_status(DIR *dir, char *svdir)
 {
