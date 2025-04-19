@@ -316,6 +316,7 @@ int get_username_from_pid(int pid, char *user, size_t user_size)
     return 0;
 }
 
+
 int check_services(DIR *dir, char *svdir)
 {
     struct dirent *entry;
@@ -325,8 +326,9 @@ int check_services(DIR *dir, char *svdir)
         {
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
                 continue;
-            char service_dir[256];
+            char service_dir[258];
             snprintf(service_dir, sizeof(service_dir), "%s/%s", svdir, entry->d_name);
+            // service_dir[sizeof(service_dir) - 1] = '\0';
             int status = service_status_short(service_dir);
             if (status > 0)
             {
