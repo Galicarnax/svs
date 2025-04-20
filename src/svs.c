@@ -87,7 +87,7 @@ int compare_entries(const void *a, const void *b)
 
 // return 0 if service is running, or disabled
 // 1 if service is down and wants up
-// 2 if error (broken symlink, non-existing run, ...)
+// 2 if error (broken symlink, no permission, ...)
 int service_status_short(const char *service_dir)
 {
     char status_path[256];
@@ -314,9 +314,9 @@ int check_services(DIR *dir, char *svdir)
     {
         if (entry->d_type == DT_DIR || entry->d_type == DT_LNK)
         {
-            dir_non_empty++;
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
                 continue;
+            dir_non_empty++;
             char service_dir[258];
             snprintf(service_dir, sizeof(service_dir), "%s/%s", svdir, entry->d_name);
             int status = service_status_short(service_dir);
@@ -324,9 +324,9 @@ int check_services(DIR *dir, char *svdir)
             if (status == 2) non_service++;
         }
     }
-    if (!dir_non_empty) return 3;
-    if (failed) return 1;
-    if (non_service) return 2;
+    if (!dir_non_empty) return 1;
+    if (failed) return 2;
+    if (non_service) return 3;
     return 0;
 }
 
@@ -482,15 +482,14 @@ void print_help()
     printf("Check the status of services in a runit service directory.\n");
     printf("Without options, svs will pretty-print the status of all services.\n");
     printf("Options:\n");
-    printf("  -d <dir>  Specify service directory (default: $SVDIR or /var/service)\n");
+    printf("  -d <dir>  Specify service directory (default: $SVDIR or /var/service).\n");
     printf("  -q        Quiet mode, only return status code:\n"
-           "            1 if at least one service failed,\n"
-           "            2 if at least one service is broken (dangling symlink,\n"
-           "              no permission, no supervise data),\n"
-           "            3 if the service directory is empty.\n"
-           "            0 otherwise.\n");
-    printf("  -v        Print version information\n");
-    printf("  -h        Print this help message\n");
+           "              1 if no entries in service directory,\n"
+           "              2 if at least one service fails,\n"
+           "              3 if at least one service cannot be checked,\n"
+           "              0 otherwise.\n");
+    printf("  -v        Print version information.\n");
+    printf("  -h        Print this help message.\n");
 }
 
 
