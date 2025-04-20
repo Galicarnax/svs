@@ -10,7 +10,6 @@
 
 typedef unsigned long long uint64;
 
-// ANSI color codes
 #define GREEN "\033[0;32m"
 #define RED "\033[0;31m"
 #define YELLOW "\033[0;33m"
@@ -24,10 +23,10 @@ typedef unsigned long long uint64;
 #define ITALIC "\033[3m"
 #define NC "\033[0m"
 
-// from runit's sources
+
+// tai-related macro and structures are borrowed from the source code of runit's sv tool
 #define tai_unix(t, u) ((void)((t)->x = 4611686018427387914ULL + (uint64)(u)))
 
-// From runit's tai.h
 struct tai
 {
     uint64 x;
@@ -86,7 +85,7 @@ int compare_entries(const void *a, const void *b)
     return strcmp(((struct dirent *)a)->d_name, ((struct dirent *)b)->d_name);
 }
 
-// return 0 if service is running,
+// return 0 if service is running, or disabled
 // 1 if service is down and wants up
 // 2 if error (broken symlink, non-existing run, ...)
 int service_status_short(const char *service_dir)
@@ -103,26 +102,18 @@ int service_status_short(const char *service_dir)
         return 2;
     }
     FILE *fp = fopen(status_path, "rb");
-    if (!fp)
-    {
-        return 2;
-    }
+    if (!fp) return 2;
 
     char svstatus[20];
     size_t nread = fread(svstatus, 1, 20, fp);
     fclose(fp);
-    if (nread != 20)
-    {
-        return 2;
-    }
+    if (nread != 20) return 2;
 
     int state = svstatus[19];
     int want = svstatus[17];
 
-    if (state == 0 && want == 'u')
-    {
-        return 1;
-    }
+    if (state == 0 && want == 'u') return 1;
+
     return 0;
 }
 
@@ -134,13 +125,13 @@ struct service_status get_service_status(const char *service_dir)
     if (stat(status_path, &s) == -1)
     {
         struct service_status status;
-        status.state = -1; // Error
+        status.state = -1;
         return status;
     }
     if (s.st_size != 20)
     {
         struct service_status status;
-        status.state = -2; // Error
+        status.state = -2;
         return status;
     }
     struct service_status status;
@@ -149,7 +140,7 @@ struct service_status get_service_status(const char *service_dir)
     FILE *fp = fopen(path, "rb");
     if (!fp)
     {
-        status.state = -1; // Error
+        status.state = -1;
         return status;
     }
 
@@ -158,7 +149,7 @@ struct service_status get_service_status(const char *service_dir)
     fclose(fp);
     if (nread != 20)
     {
-        status.state = -1; // Error
+        status.state = -1;
         return status;
     }
 
@@ -183,17 +174,17 @@ struct service_status get_service_status(const char *service_dir)
     {
         if (errno == ENOENT)
         {
-            status.normallyup = 1; // Service is normally up
+            status.normallyup = 1;
         }
         else
         {
             fprintf(stderr, "warn: unable to stat %s/down: %s\n", service_dir, strerror(errno));
-            status.state = -1; // Error
+            status.state = -1;
         }
     }
     else
     {
-        status.normallyup = 0; // Service is normally down
+        status.normallyup = 0;
     }
 
     return status;
@@ -288,7 +279,7 @@ int get_username_from_pid(int pid, char *user, size_t user_size)
             int ruid, euid, suid, fsuid;
             if (sscanf(line, "Uid:\t%d\t%d\t%d\t%d", &ruid, &euid, &suid, &fsuid) == 4)
             {
-                uid = ruid; // Real UID
+                uid = ruid;
             }
             break;
         }
@@ -420,7 +411,6 @@ int print_status(DIR *dir, char *svdir)
 
         const char *autostart = S.normallyup ? YELLOW "+" NC : GRAY "-" NC;
 
-        // PID and User
         char pid_str[6] = "---";
         char user[16] = "---";
         if (S.pid && (S.state == 1 || S.state == 2))
