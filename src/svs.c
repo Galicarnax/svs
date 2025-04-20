@@ -470,12 +470,36 @@ int print_status(DIR *dir, char *svdir)
 }
 
 
+void print_version()
+{
+    printf("svs version 0.0.1\n");
+}
+
+
+void print_help()
+{
+    printf("Usage: svs [options]\n");
+    printf("Check the status of services in a runit service directory.\n");
+    printf("Without options, svs will pretty-print the status of all services.\n");
+    printf("Options:\n");
+    printf("  -d <dir>  Specify service directory (default: $SVDIR or /var/service)\n");
+    printf("  -q        Quiet mode, only return status code:\n"
+           "            1 if at least one service failed,\n"
+           "            2 if at least one service is broken (dangling symlink,\n"
+           "              no permission, no supervise data),\n"
+           "            3 if the service directory is empty.\n"
+           "            0 otherwise.\n");
+    printf("  -v        Print version information\n");
+    printf("  -h        Print this help message\n");
+}
+
+
 int main(int argc, char *argv[])
 {
     int opt;
     int quiet_mode = 0;
     char *svdir = NULL;
-    while ((opt = getopt(argc, argv, "qd:")) != -1)
+    while ((opt = getopt(argc, argv, "hqvd:")) != -1)
     {
         switch (opt)
         {
@@ -485,6 +509,12 @@ int main(int argc, char *argv[])
         case 'd':
             svdir = optarg;
             break;
+        case 'v':
+            print_version();
+            return 0;
+        case 'h':
+            print_help();
+            return 0;
         default:
             fprintf(stderr, "Unknown option: -%c\n", optopt);
             return 1;
