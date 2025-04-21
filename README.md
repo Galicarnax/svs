@@ -4,9 +4,12 @@ Check/view status of `runit` services.
 
 ## Description
 
-`svs` is not a wrapper for `sv`. It checks the status of `runit`
-services directly reading binary data from `supervise/status` of
-each service. The output format is inspired by `vsv`.
+`svs` checks the statuses of `runit` services, directly reading binary
+data from `supervise/status` of each service (so it's not a wrapper
+around `sv`). The output format is inspired by `vsv`. Unlike `vsv`,
+the output is more compact and more informative about statuses (not
+just `run`/`down`). Also, it has a quiet mode (e.g., suitable for
+periodic checks with cron).
 
 ## Usage
 
